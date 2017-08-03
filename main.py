@@ -1,6 +1,9 @@
 import json
 # from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import Normalizer
 
 dataset_file = open("dataset.json")
 
@@ -20,3 +23,13 @@ for review in dataset:
 vectorizer = TfidfVectorizer()
 vectors = vectorizer.fit_transform(review_texts)
 print(vectors.shape)
+
+svd = TruncatedSVD(100) 
+#For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
+
+normalizer = Normalizer(copy=False)
+lsa = make_pipeline(svd, normalizer)
+
+vectors = lsa.fit_transform(vectors)
+print(vectors.shape)
+
