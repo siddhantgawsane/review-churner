@@ -1,32 +1,40 @@
 import json
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+import re
+# import matplotlib.pyplot as plt
+# import pandas as pd
 # from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import Normalizer
-from sklearn.feature_extraction import text
+from sklearn.feature_extraction import text as Text
 from sklearn.cluster import KMeans
 from textblob import TextBlob
 
-dataset_file = open("review.json")
+dataset_file = open("dataset.json")
 
 dataset = json.loads(dataset_file.readline())
 review_texts = []
 for review in dataset:
-    str1 = review[0]
-    #print ('a1')
-    blob = TextBlob(str1)
-    x=blob.detect_language() 
-    if (x!='en'):
-        y1=blob.translate(to='en')
-        review_texts.append(str(y1))
-        #print ('its translated')
+    blob = TextBlob(review[0])
+    language = blob.detect_language()
+
+    if (language!='en'):
+        translation = blob.translate(to='en')
+        text = str(translation)
     else:
-        review_texts.append(str(blob))
-print (review_texts)
+        text = str(blob)
+
+    text = re.sub(r"http\S+", "", text)	#remove urls
+    text = re.sub(r'[^\w\s]',' ',text)	#remove punctuations
+    text = re.sub(r'\w*\d\w*', '', text).strip()	#remove words with numbers in them
+    text = re.sub(r"\s+", " ", text, flags=re.UNICODE)	#remove unicode white spaces
+    review_texts.append(text)
+
+    # if len(review_texts) > 50:
+    # 	break
+# print (review_texts)
    
     #print (review[0])
     
@@ -40,10 +48,10 @@ print (review_texts)
 # vectorizer = TfidfVectorizer()
 # vectors = vectorizer.fit_transform(newsgroups_train.data)
 # print(vectors.shape)
-"""
+
 #removing stopwords
-my_stop_words = text.ENGLISH_STOP_WORDS.union(["book"])
-vectorizer = TfidfVectorizer(stop_words=my_stopword_list)
+my_stop_words = Text.ENGLISH_STOP_WORDS.union(["book"])
+vectorizer = TfidfVectorizer(stop_words=my_stop_words)
 
 
 
@@ -52,7 +60,7 @@ vectors = vectorizer.fit_transform(review_texts)
 terms = vectorizer.get_feature_names()
 print(terms)
 #print(vectors.shape)
-
+"""
 svd = TruncatedSVD(100) 
 #For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
 
