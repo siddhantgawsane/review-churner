@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import json
 import numpy as np
 import re
@@ -27,11 +29,7 @@ def tokenize_and_stem(text):
     stems = [stemmer.stem(t) for t in filtered_tokens]
     return stems
 
-<<<<<<< HEAD
-dataset_file = open("review.json")
-=======
 dataset_file = open("dataset.json")
->>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
 
 dataset = json.loads(dataset_file.readline())
 review_texts = []
@@ -51,60 +49,26 @@ for review in dataset:
     text = re.sub(r"\s+", " ", text, flags=re.UNICODE)	#remove unicode white spaces
     review_texts.append(text)
 
-    if len(review_texts) > 100:
-    	break
-# print (review_texts)
-   
-    #print (review[0])
-    
-	#review_texts.append(review[0])
-    #blob = TextBlob(review)
-#print (review_texts)
+    # if len(review_texts) > 499:
+    # 	break
 
-
-# categories = ['alt.atheism', 'talk.religion.misc', 'comp.graphics', 'sci.space']
-# newsgroups_train = fetch_20newsgroups(subset='train', categories=categories)
-# vectorizer = TfidfVectorizer()
-# vectors = vectorizer.fit_transform(newsgroups_train.data)
-# print(vectors.shape)
-<<<<<<< HEAD
-=======
-
-#removing stopwords
-# my_stop_words = Text.ENGLISH_STOP_WORDS.union(["book"])
-# vectorizer = TfidfVectorizer(stop_words=my_stop_words, analyzer=stemmed_words)
 vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
                                  min_df=0.2, stop_words='english',
                                  use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
 
->>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
-
-#removing stopwords
-# my_stop_words = Text.ENGLISH_STOP_WORDS.union(["book"])
-# vectorizer = TfidfVectorizer(stop_words=my_stop_words, analyzer=stemmed_words)
-vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
-                                 min_df=0.2, stop_words='english',
-                                 use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
-
-<<<<<<< HEAD
-vectors = vectorizer.fit_transform(review_texts)
-terms = vectorizer.get_feature_names()
-print (terms)
-=======
 # vectorizer = TfidfVectorizer()
 vectors = vectorizer.fit_transform(review_texts)
 # terms = vectorizer.get_feature_names()
->>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
 # print(vectors[0][0])
 # print(vectors.shape)
-"""
+
 svd = TruncatedSVD(100) 
 #For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
 normalizer = Normalizer(copy=False)
 lsa = make_pipeline(svd, normalizer)
 vectors = lsa.fit_transform(vectors)
 #print(vectors.shape)
-"""
+
 
 num_clusters = 5
 
@@ -119,8 +83,6 @@ print (clusters.count(1))
 print (clusters.count(2))
 print (clusters.count(3))
 print (clusters.count(4))
-<<<<<<< HEAD
-=======
 
 """
 #USING ELBOW METHOD to find optimum cluster
@@ -146,10 +108,7 @@ model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1)
 #print("Clustering sparse data with %s" % model)
 #t0 = time()
 model.fit(vectors)
->>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
-
-
-from __future__ import print_function
+"""
 
 print ("Top terms per cluster:")
 order_centroids = km.cluster_centers_.argsort()[:, ::-1]
