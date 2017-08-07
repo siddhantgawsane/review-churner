@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import re
-import nltk
+import nltk 
 # import matplotlib.pyplot as plt
 # import pandas as pd
 # from sklearn.datasets import fetch_20newsgroups
