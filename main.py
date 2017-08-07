@@ -27,7 +27,11 @@ def tokenize_and_stem(text):
     stems = [stemmer.stem(t) for t in filtered_tokens]
     return stems
 
+<<<<<<< HEAD
 dataset_file = open("review.json")
+=======
+dataset_file = open("dataset.json")
+>>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
 
 dataset = json.loads(dataset_file.readline())
 review_texts = []
@@ -63,6 +67,8 @@ for review in dataset:
 # vectorizer = TfidfVectorizer()
 # vectors = vectorizer.fit_transform(newsgroups_train.data)
 # print(vectors.shape)
+<<<<<<< HEAD
+=======
 
 #removing stopwords
 # my_stop_words = Text.ENGLISH_STOP_WORDS.union(["book"])
@@ -71,9 +77,24 @@ vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
                                  min_df=0.2, stop_words='english',
                                  use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
 
+>>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
+
+#removing stopwords
+# my_stop_words = Text.ENGLISH_STOP_WORDS.union(["book"])
+# vectorizer = TfidfVectorizer(stop_words=my_stop_words, analyzer=stemmed_words)
+vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
+                                 min_df=0.2, stop_words='english',
+                                 use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
+
+<<<<<<< HEAD
 vectors = vectorizer.fit_transform(review_texts)
 terms = vectorizer.get_feature_names()
 print (terms)
+=======
+# vectorizer = TfidfVectorizer()
+vectors = vectorizer.fit_transform(review_texts)
+# terms = vectorizer.get_feature_names()
+>>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
 # print(vectors[0][0])
 # print(vectors.shape)
 """
@@ -98,6 +119,34 @@ print (clusters.count(1))
 print (clusters.count(2))
 print (clusters.count(3))
 print (clusters.count(4))
+<<<<<<< HEAD
+=======
+
+"""
+#USING ELBOW METHOD to find optimum cluster
+from sklearn.cluster import KMeans
+wcss = []
+#we are trying to figure out the right number clusters 
+for i in range (1,11):
+    kmeans=KMeans(n_clusters=i, init='k-means++', n_init=10, max_iter=300, random_state=0)
+    kmeans.fit(vectors)  #fit fits Kmeans algorithm to your data
+    #inertia- 
+    wcss.append(kmeans.inertia_)
+#plot elbow method graph
+plt.plot(range(1,11),wcss)#wcss is x-axis and range is y axis
+plt.title('The elbow method')
+plt.xlabel('Number of clusters')
+plt.ylabel('WCSS')
+plt.show()
+
+
+#Clustering
+true_k = 10
+model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1)
+#print("Clustering sparse data with %s" % model)
+#t0 = time()
+model.fit(vectors)
+>>>>>>> 0adcead350bcbd879677d4174d87f418eb996786
 
 
 from __future__ import print_function
