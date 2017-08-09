@@ -1,119 +1,126 @@
-from __future__ import print_function
+import string
+import collections
+import nltk
+#nltk.download()
+from nltk import word_tokenize
 
-import json
-import numpy as np
-import re
-import nltk 
-# import matplotlib.pyplot as plt
-# import pandas as pd
-# from sklearn.datasets import fetch_20newsgroups
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+from nltk import FreqDist
+from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import Normalizer
-from sklearn.feature_extraction import text as Text
-from sklearn.cluster import KMeans
+from pprint import pprint
 from textblob import TextBlob
-
-from nltk.stem.snowball import SnowballStemmer
-stemmer = SnowballStemmer("english")
-
-def tokenize_and_stem(text):
-    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
-    tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
-    filtered_tokens = []
-    # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
-    for token in tokens:
-        if re.search('[a-zA-Z]', token):
-            filtered_tokens.append(token)
-    stems = [stemmer.stem(t) for t in filtered_tokens]
-    return stems
-
-dataset_file = open("dataset.json")
-
-dataset = json.loads(dataset_file.readline())
-review_texts = []
-for review in dataset:
-    blob = TextBlob(review[0])
-    language = blob.detect_language()
-
-    if (language!='en'):
-        translation = blob.translate(to='en')
-        text = str(translation)
-    else:
-        text = str(blob)
-
-    text = re.sub(r"http\S+", "", text)	#remove urls
-    text = re.sub(r'[^\w\s]','',text)	#remove punctuations
-    text = re.sub(r'\w*\d\w*', '', text).strip()	#remove words with numbers in them
-    text = re.sub(r"\s+", " ", text, flags=re.UNICODE)	#remove unicode white spaces
-    review_texts.append(text)
-
-    # if len(review_texts) > 499:
-    # 	break
-
-vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
-                                 min_df=0.2, stop_words='english',
-                                 use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
-
-# vectorizer = TfidfVectorizer()
-vectors = vectorizer.fit_transform(review_texts)
-terms = vectorizer.get_feature_names()
-# print(vectors[0][0])
-# print(vectors.shape)
-
-# svd = TruncatedSVD(100) 
-# #For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
-# normalizer = Normalizer(copy=False)
-# lsa = make_pipeline(svd, normalizer)
-# vectors = lsa.fit_transform(vectors)
-#print(vectors.shape)
+import json
+import re
+from gensim.summarization import keywords
+from gensim.summarization import summarize
+from operator import itemgetter
+import csv
 
 
-num_clusters = 5
+def word_count(words, n):
+	freq_dist = {}
+	for word in words:
+		if word in stopwords.words('english'):
+			continue
+		if word not in freq_dist:
+			freq_dist[word] = 1
+		else:
+			freq_dist[word] = freq_dist[word] + 1
+	return 	sorted(freq_dist.items(), key=itemgetter(1))
 
-km = KMeans(n_clusters=num_clusters)
+def process_text(text, stem=True):
+	""" Tokenize text and stem words removing punctuation """
+	# text = text.translate(None, string.punctuation)
+	tokens = word_tokenize(text)
+	if stem:
+		stemmer = PorterStemmer()
+		tokens = [stemmer.stem(t) for t in tokens]
+	return tokens
 
-km.fit(vectors)
+def cluster_texts(texts, clusters=3):
+	""" Transform texts to Tf-Idf coordinates and cluster texts using K-Means """
+	vectorizer = TfidfVectorizer(tokenizer=process_text,
+	stop_words='english',
+	max_df=0.5,
+	min_df=0.1,
+	lowercase=True)
+	tfidf_model = vectorizer.fit_transform(texts)
 
-clusters = km.labels_.tolist()
+	# svd = TruncatedSVD(100) 
+	# #For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
+	# normalizer = Normalizer(copy=False)
+	# lsa = make_pipeline(svd, normalizer)
+	# tfidf_model = lsa.fit_transform(tfidf_model)
+	#print(tfidf_model.shape)
 
-print (clusters.count(0))
-print (clusters.count(1))
-print (clusters.count(2))
-print (clusters.count(3))
-print (clusters.count(4))
+	
+	km_model = KMeans(n_clusters=clusters)
+	km_model.fit(tfidf_model)
+	clustering = collections.defaultdict(list)
+	for idx, label in enumerate(km_model.labels_):
+		clustering[label].append(idx)
+	return clustering
 
-"""
-#USING ELBOW METHOD to find optimum cluster
-from sklearn.cluster import KMeans
-wcss = []
-#we are trying to figure out the right number clusters 
-for i in range (1,11):
-    kmeans=KMeans(n_clusters=i, init='k-means++', n_init=10, max_iter=300, random_state=0)
-    kmeans.fit(vectors)  #fit fits Kmeans algorithm to your data
-    #inertia- 
-    wcss.append(kmeans.inertia_)
-#plot elbow method graph
-plt.plot(range(1,11),wcss)#wcss is x-axis and range is y axis
-plt.title('The elbow method')
-plt.xlabel('Number of clusters')
-plt.ylabel('WCSS')
-plt.show()
+if __name__ == "__main__":
+	dataset_size = 999
+	dataset_file = open("dataset.json")
 
+	dataset = json.loads(dataset_file.readline())
+	review_texts = []
+	for review in dataset:
+		if int(review[1]) > 3:
+			continue
+		blob = TextBlob(review[0])
+		language = blob.detect_language()
 
-#Clustering
-true_k = 10
-model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1)
-#print("Clustering sparse data with %s" % model)
-#t0 = time()
-model.fit(vectors)
-"""
+		if (language!='en'):
+			translation = blob.translate(to='en')
+			text = str(translation)
+		else:
+			text = str(blob)
 
-print ("Top terms per cluster:")
-order_centroids = km.cluster_centers_.argsort()[:, ::-1]
-for i in range(num_clusters):
-    print ("Cluster %d:" % i)
-    for ind in order_centroids[i, :10]:
-        print (' %s' % terms[ind])
-    print
+		text = re.sub(r"http\S+", "", text)	#remove urls
+		text = re.sub(r'[^\w\s]','',text)	#remove punctuations
+		text = re.sub(r'\w*\d\w*', '', text).strip()	#remove words with numbers in them
+		text = re.sub(r"\s+", " ", text, flags=re.UNICODE)	#remove unicode white spaces
+		review_texts.append(text)
+		
+		if len(review_texts) > dataset_size:
+			break
+
+	print len(review_texts)
+
+	k = 29
+
+	clusters = dict(cluster_texts(review_texts,k))
+	problem_list = []
+	for cluster_no in range(0,k):
+		problems_per_cluster = ['Cluster %d'%cluster_no]
+		text = ""
+		# print "CLUSTER %d" % cluster_no,
+		for review_number in clusters[cluster_no]:
+			text = text + " " + "".join(review_texts[review_number])
+			# print text
+		noun_phrases = TextBlob(text).noun_phrases
+		phrase_count = {}
+		for phrase in set(noun_phrases):
+			if phrase in stopwords.words('english') or phrase in ['came','told','dont','outside','okay','ok','oh','really', 'never','everyone','went','sat','well','definitely']:
+				continue
+			sentiment = TextBlob(phrase).sentiment
+			if sentiment.polarity > 0.5 or sentiment.subjectivity > 0.5:
+				continue
+			count = sum(1 for _ in re.finditer(r'\b%s\b' % re.escape(phrase), text))
+			phrase_count[phrase] = count
+		insights = sorted(phrase_count.items(), key=itemgetter(1), reverse=True)[:20]
+		for insight in insights:
+			problems_per_cluster.append(insight[0])
+		problem_list.append(problems_per_cluster)
+
+	csv_file = csv.writer(open('data_size_%d_clusters_%d.csv'%(dataset_size,k),'w'))
+	for row in zip(*problem_list):
+		csv_file.writerow(row)
+		# for phrase in row:
+			# print phrase, "\t\t\t\t\t",
+		# print 
