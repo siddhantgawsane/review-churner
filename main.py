@@ -58,15 +58,15 @@ vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
 
 # vectorizer = TfidfVectorizer()
 vectors = vectorizer.fit_transform(review_texts)
-# terms = vectorizer.get_feature_names()
+terms = vectorizer.get_feature_names()
 # print(vectors[0][0])
 # print(vectors.shape)
 
-svd = TruncatedSVD(100) 
-#For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
-normalizer = Normalizer(copy=False)
-lsa = make_pipeline(svd, normalizer)
-vectors = lsa.fit_transform(vectors)
+# svd = TruncatedSVD(100) 
+# #For LSA, a value of 100 is recommended  http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD
+# normalizer = Normalizer(copy=False)
+# lsa = make_pipeline(svd, normalizer)
+# vectors = lsa.fit_transform(vectors)
 #print(vectors.shape)
 
 
